@@ -90,7 +90,7 @@ code_main_color = {
 }
 
 COLD = 265 # K
-HOT = 315
+HOT = 308
 # Assume temperature in kelvin
 def characterize_weather(weather):
     colors = []
