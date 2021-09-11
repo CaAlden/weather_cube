@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from yaml import load, Loader
 from pprint import pprint
 from paho.mqtt import client as mqtt_client
