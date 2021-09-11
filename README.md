@@ -1,7 +1,30 @@
-# Installing Service on a Raspberry Pi
-This will document the steps taken to implement running this script on a raspberry pi
+# Weather Cube
 
-## Hardware
+Set an LED to specific colors and patterns based on the current weather. This script uses the
+[openweathermap](https://openweathermap.org/) api to collect the current weather conditions and calculates a color based on the
+current temperature. If there are rain-like conditions the like will also be told to alternate
+between the temperature color and an out-of-specturm color indicating rain.
+
+## Configuration
+
+The `weather_cube.py` script expects a single command line argument indicating the path to a yaml
+config file. The following can be used as a template:
+
+```yaml
+mqtt:
+  username: 'some_homeassistant_user'
+  password: '***'
+  broker: '<MQTT Broker ip address>'
+  port: 1883
+  topic: 'weather_cube'
+  client_id: 'weather_cube_controller'
+weather:
+  lat: '<Your Latitude>'
+  lon: '<Your Longitude>'
+  api_key: '<Your openweathermap.org API key>'
+```
+
+## Hardware and Setup
 
 ### Light
 The light for this project simply an LED board connected directly into a small, wifi-capable
@@ -44,7 +67,7 @@ Description=Weather Cube
 
 [Service]
 ExecStart=/usr/local/bin/weather_cube.py /etc/weather_cube_config.yaml
-# Specifying StandardOutput may or maynot be necessary.
+# Specifying StandardOutput may or may not be necessary.
 # I did not see logs until I did this and added flush=True logic to the print statements
 # in the script. It's possible this is unnecessary
 StandardOutput=syslog+console
