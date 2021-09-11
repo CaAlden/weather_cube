@@ -22,7 +22,7 @@ def connect_mqtt(mqtt_config):
         if rc == 0:
             pprint(userdata)
         else:
-            print(f'Failed to connect, return code {rc}')
+            print(f'Failed to connect, return code {rc}', flush=True)
 
     client = mqtt_client.Client(mqtt_config['client_id'])
     client.username_pw_set(mqtt_config['username'], mqtt_config['password'])
@@ -32,9 +32,9 @@ def connect_mqtt(mqtt_config):
 
 # Subscribe to a topic
 def subscribe(client, topic):
-    print(f'Subscribing to {topic}')
+    print(f'Subscribing to {topic}', flush=True)
     def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic", flush=True)
 
     client.subscribe(topic)
     client.on_message = on_message
@@ -118,18 +118,15 @@ def characterize_weather(weather):
 REFRESH_SPEED = 300
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print(f'Usage {sys.argv[0]} <config filename>')
+        print(f'Usage {sys.argv[0]} <config filename>', flush=True)
         sys.exit(1)
 
     with open(sys.argv[1], 'r') as configFile:
         config = load(configFile, Loader=Loader)
 
     if config is None:
-        print('Failed to load config.yaml')
+        print('Failed to load config.yaml', flush=True)
         sys.exit(1);
-
-    print('CONFIG LOADED')
-    pprint(config)
 
     # Configure MQTT
     client = connect_mqtt(config['mqtt'])
@@ -142,14 +139,13 @@ if __name__ == '__main__':
     while True:
         now = datetime.now()
         if now.hour < 9 or now.hour > 22:
-            print('sleeping until a more reasonable hour')
+            print('sleeping until a more reasonable hour', flush=True)
             send_power(client, config['mqtt']['topic'], 'OFF')
             time.sleep(REFRESH_SPEED)
         else:
             weather_now = get_current_weather(config['weather'])
-            print('WEATHER UPDATE\n')
-            pprint(weather_now)
+            print('WEATHER UPDATE\n', flush=True)
             colors = characterize_weather(weather_now)
-            print(colors)
+            print(colors, flush=True)
             handle_color_settings(client, config['mqtt']['topic'], colors, REFRESH_SPEED)
 
