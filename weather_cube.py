@@ -115,23 +115,29 @@ def characterize_weather(weather):
 ## ACTUAL SCRIPT START
 
 # LOAD IN CONFIG
-with open('./config.yaml', 'r') as configFile:
-    config = load(configFile, Loader=Loader)
-
-if config is None:
-    print('Failed to load config.yaml')
-    sys.exit(1);
-
-print('CONFIG LOADED')
-pprint(config)
-
-# Configure MQTT
-client = connect_mqtt(config['mqtt'])
-subscribe(client, f"{config['mqtt']['topic']}/#")
-client.loop_start()
-
 REFRESH_SPEED = 300
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print(f'Usage {sys.argv[0]} <config filename>')
+        sys.exit(1)
+
+    with open(sys.argv[1], 'r') as configFile:
+        config = load(configFile, Loader=Loader)
+
+    if config is None:
+        print('Failed to load config.yaml')
+        sys.exit(1);
+
+    print('CONFIG LOADED')
+    pprint(config)
+
+    # Configure MQTT
+    client = connect_mqtt(config['mqtt'])
+    subscribe(client, f"{config['mqtt']['topic']}/#")
+    client.loop_start()
+
+    config
+
     # Begin looping through and checking for weather
     while True:
         now = datetime.now()

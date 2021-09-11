@@ -1,1 +1,1 @@
-nohup python3 ./weather_cube.py &
+nohup python3 ./weather_cube.py ./config.yaml &
