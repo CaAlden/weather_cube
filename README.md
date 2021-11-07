@@ -26,6 +26,12 @@ weather:
 
 ## Hardware and Setup
 
+### MQTT Broker
+I am running an [MQTT broker](https://en.wikipedia.org/wiki/MQTT#MQTT_broker) via an [add on](https://www.home-assistant.io/docs/mqtt/broker/) to [Home Assistant](https://www.home-assistant.io/getting-started/).
+This entire set up is running on a separate raspberry pi currently, but in the future it might
+be more resource conscious to run both the home assistant logic and the weather cube script
+on the same machine.
+
 ### Light
 The light for this project simply an LED board connected directly into a small, wifi-capable
 microcontroller.
@@ -34,11 +40,21 @@ microcontroller.
 - [Wemos D1 Mini](https://www.wemos.cc/en/latest/d1/d1_mini.html)
 - [Tasmota](https://tasmota.github.io/docs/About/) Image flashed on the D1 Mini
 
-### MQTT Broker
-I am running an [MQTT broker](https://en.wikipedia.org/wiki/MQTT#MQTT_broker) via an [add on](https://www.home-assistant.io/docs/mqtt/broker/) to [Home Assistant](https://www.home-assistant.io/getting-started/).
-This entire set up is running on a separate raspberry pi currently, but in the future it might
-be more resource conscious to run both the home assistant logic and the weather cube script
-on the same machine.
+#### Commands and Default Settings
+Configuring the light to work nicely with the script requires setting a few options through
+the configuration and via the console.
+
+1. First configure `MQTT` via the MQTT menu. Make sure that the light has the correct credentials to authenticate with your MQTT broker and that the
+topic matches the topic you have configured in your weather cube script's config file. The default value will likely not match and you may see issues
+connecting to it as a result.
+2. Configure the following settings through the console (all options can be found [here](https://tasmota.github.io/docs/Commands/#light)):
+  - `Fade 1` -- This will enable a smooth transition between colors. The light uses `Scheme 2` to automatically transition between colors so fade makes this look less ugly.
+  - `Speed 10` -- The speed option causes the light to spend more or less time when transitioning between colors. The resulting time is `0.5s * speed` so `Speed 10` will make the light take 5 seconds to transition between colors.
+  - `SetOption19 1` -- This will enable automatic MQTT discovery with Homeassistant which helps with debugging your MQTT setup.
+  - `Scheme 2` -- Setting this may not do much but if you are having trouble running the script it might help to have the light already configured in the mode for toggling between colors.
+
+#### Troubleshooting
+Changing wifi networks can be somewhat of a hassle but it is possible to reset a Tasmota board into the wifi hotspot mode by restarting it 6 times in a row and leaving it on the 7th time. [See docs](https://tasmota.github.io/docs/Device-Recovery/)
 
 ### Dedicated Script-Running Raspberry Pi
 Currently the `weather_cube.py` script is being run on a raspberry pi via a systemd service.
