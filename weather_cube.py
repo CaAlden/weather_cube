@@ -146,6 +146,7 @@ if __name__ == '__main__':
         else:
             weather_now = get_current_weather(config['weather'])
             print('WEATHER UPDATE\n', flush=True)
+            pprint(weather_now)
             colors = characterize_weather(weather_now)
             print(colors, flush=True)
             handle_color_settings(client, config['mqtt']['topic'], colors, REFRESH_SPEED)
