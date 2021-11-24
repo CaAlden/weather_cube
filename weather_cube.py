@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 from yaml import load, Loader
+from json import loads
 from pprint import pprint
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
+from threading import Event
 
 import colorsys
 import math
 import requests
 import sys
-import time
 
 def toHex(num):
     return hex(int(num)).split('x')[1].zfill(2).upper()
@@ -32,10 +33,8 @@ def connect_mqtt(mqtt_config):
     return client
 
 # Subscribe to a topic
-def subscribe(client, topic):
+def subscribe(client, topic, on_message):
     print(f'Subscribing to {topic}', flush=True)
-    def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic", flush=True)
 
     client.subscribe(topic)
     client.on_message = on_message
@@ -56,7 +55,7 @@ def send_colors(client, topic, colors):
     client.publish(f'{topic}/cmnd/Palette', ' '.join(color_codes))
     client.publish(f'{topic}/cmnd/Scheme', '2')
 
-def handle_color_settings(client, topic, colors, duration):
+def handle_color_settings(client, topic, colors):
     temp, special_condition = colors
 
     if special_condition:
@@ -65,8 +64,6 @@ def handle_color_settings(client, topic, colors, duration):
         send_colors(client, topic, [c1, c2])
     else:
         send_colors(client, topic, [makeColorTuple(temp)])
-
-    time.sleep(duration)
 
 ## END MQTT LOGIC
 
@@ -118,6 +115,7 @@ def characterize_weather(weather):
 
 # LOAD IN CONFIG
 REFRESH_SPEED = 300
+SAW_RESTART_SIGNAL = Event()
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print(f'Usage {sys.argv[0]} <config filename>', flush=True)
@@ -130,25 +128,32 @@ if __name__ == '__main__':
         print('Failed to load config.yaml', flush=True)
         sys.exit(1);
 
+
+    def on_message(client, userdata, msg):
+        payload = msg.payload.decode()
+        if msg.topic == f"{config['mqtt']['topic']}/INFO3" and 'RestartReason' in loads(payload)['Info3']:
+            SAW_RESTART_SIGNAL.set()
+        print(f"Received `{payload}` from `{msg.topic}` topic", flush=True)
+
     # Configure MQTT
     client = connect_mqtt(config['mqtt'])
-    subscribe(client, f"{config['mqtt']['topic']}/#")
+    subscribe(client, f"{config['mqtt']['topic']}/#", on_message)
     client.loop_start()
-
-    config
 
     # Begin looping through and checking for weather
     while True:
+        SAW_RESTART_SIGNAL.clear()
         now = datetime.now()
         if now.hour < 9 or now.hour > 22:
             print('sleeping until a more reasonable hour', flush=True)
             send_power(client, config['mqtt']['topic'], 'OFF')
-            time.sleep(REFRESH_SPEED)
+            SAW_RESTART_SIGNAL.wait(REFRESH_SPEED)
         else:
             weather_now = get_current_weather(config['weather'])
             print('WEATHER UPDATE\n', flush=True)
             pprint(weather_now)
             colors = characterize_weather(weather_now)
             print(colors, flush=True)
-            handle_color_settings(client, config['mqtt']['topic'], colors, REFRESH_SPEED)
+            handle_color_settings(client, config['mqtt']['topic'], colors)
+            SAW_RESTART_SIGNAL.wait(REFRESH_SPEED)
 
