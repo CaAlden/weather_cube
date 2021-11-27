@@ -88,7 +88,7 @@ code_main_color = {
     'Tornado': '#FF0099',
 }
 
-COLD = 265 # K
+COLD = 273 # K
 HOT = 308
 # Assume temperature in kelvin
 def characterize_weather(weather):
