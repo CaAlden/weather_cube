@@ -4,7 +4,10 @@ from json import loads
 from pprint import pprint
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
+from flask import Flask
 from threading import Event
+from multiprocessing import Process, Value, Array
+import ctypes
 
 import colorsys
 import math
@@ -111,6 +114,13 @@ def characterize_weather(weather):
 
 ## END WEATHER LOGIC
 
+def cubeStateToStr(state):
+    return {
+        0: 'Idle',
+        1: 'Running',
+        2: 'Sleeping until morning...',
+    }[state]
+
 ## ACTUAL SCRIPT START
 
 # LOAD IN CONFIG
@@ -128,6 +138,54 @@ if __name__ == '__main__':
         print('Failed to load config.yaml', flush=True)
         sys.exit(1);
 
+    tempColor = Array(ctypes.c_uint32, [0, 0, 0], lock=False)
+    cubeState = Value('i', 0, lock=False)
+    updated = Value('d', datetime.now().timestamp(), lock=False)
+    raining = Value('b', False, lock=False)
+    app = Flask(__name__)
+    @app.route('/')
+    def index():
+        return f"""
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weather Cube</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+
+  </head>
+  <body>
+    <main>
+        <h1>Weather Cube</h1>
+        <table>
+            <tbody>
+                <tr>
+                    <td>State</td>
+                    <td>{cubeStateToStr(cubeState.value)}</td>
+                </tr>
+                <tr>
+                    <td>Updated</td>
+                    <td>{datetime.fromtimestamp(updated.value).isoformat()}</td>
+                </tr>
+                <tr>
+                    <td>Color</td>
+                    <td style="display: flex; gap: 10px; color: rgb({tempColor[0]}, {tempColor[1]}, {tempColor[2]})">{tempColor[:]}</td>
+                </tr>
+                <tr>
+                    <td>Rain / Snow etc.</td>
+                    <td>{raining.value}</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+  </body>
+</html>
+    """
+
+    # Kick off the webhost
+    webhost = Process(target=lambda: app.run(host="0.0.0.0"))
+    webhost.start()
 
     def on_message(client, userdata, msg):
         payload = msg.payload.decode()
@@ -145,14 +203,25 @@ if __name__ == '__main__':
         SAW_RESTART_SIGNAL.clear()
         now = datetime.now()
         if now.hour < 9 or now.hour > 22:
+            cubeState.value = 2
+            updated.value = now.timestamp()
             print('sleeping until a more reasonable hour', flush=True)
             send_power(client, config['mqtt']['topic'], 'OFF')
             SAW_RESTART_SIGNAL.wait(REFRESH_SPEED)
         else:
             weather_now = get_current_weather(config['weather'])
             print('WEATHER UPDATE\n', flush=True)
+            cubeState.value = 1
+            updated.value = datetime.now().timestamp()
             pprint(weather_now)
             colors = characterize_weather(weather_now)
+
+            if colors[0] is not None:
+                rgb = makeColorTuple(colors[0])
+                tempColor[0] = rgb[0]
+                tempColor[1] = rgb[1]
+                tempColor[2] = rgb[2]
+
             print(colors, flush=True)
             handle_color_settings(client, config['mqtt']['topic'], colors)
             SAW_RESTART_SIGNAL.wait(REFRESH_SPEED)

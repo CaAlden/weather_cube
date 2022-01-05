@@ -4,6 +4,7 @@ in pkgs.mkShell {
   buildInputs = [
     pkgs.python3
     pkgs.python3.pkgs.requests
+    pkgs.python3.pkgs.flask
     pkgs.python3.pkgs.pyyaml
     pkgs.python3.pkgs.paho-mqtt
   ];
