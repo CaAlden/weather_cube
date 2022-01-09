@@ -91,13 +91,30 @@ code_main_color = {
     'Tornado': '#FF0099',
 }
 
+def code_to_condition(code):
+    if code == -1:
+        return 'Clear'
+    return list(code_main_color.keys())[code]
+
+def condition_to_code(condition):
+    try:
+        return list(code_main_color.keys()).index(condition)
+    except ValueError:
+        return -1
+
+def get_condition(weather):
+    return weather['weather'][0]['main']
+
+def get_temp(weather):
+    return weather['main']['temp']
+
 COLD = 273 # K
 HOT = 308
 # Assume temperature in kelvin
 def characterize_weather(weather):
     colors = []
-    condition_code = weather['weather'][0]['main']
-    temp = weather['main']['temp']
+    condition_code = get_condition(weather)
+    temp = get_temp(weather)
 
     if temp <= COLD:
         colors.append(hsv2rgb(0.6, 1, 1))
@@ -140,6 +157,8 @@ if __name__ == '__main__':
 
     tempColor = Array(ctypes.c_uint32, [0, 0, 0], lock=False)
     cubeState = Value('i', 0, lock=False)
+    conditionState = Value('i', -1, lock=False)
+    tempValue = Value('d', 0.0, lock=False)
     updated = Value('d', datetime.now().timestamp(), lock=False)
     raining = Value('b', False, lock=False)
     app = Flask(__name__)
@@ -167,6 +186,14 @@ if __name__ == '__main__':
                 <tr>
                     <td>Updated</td>
                     <td>{datetime.fromtimestamp(updated.value).isoformat()}</td>
+                </tr>
+                <tr>
+                    <td>Temperature</td>
+                    <td>{tempValue.value}°C</td>
+                </tr>
+                <tr>
+                    <td>Condition</td>
+                    <td>{code_to_condition(conditionState.value)}</td>
                 </tr>
                 <tr>
                     <td>Color</td>
@@ -213,6 +240,8 @@ if __name__ == '__main__':
             print('WEATHER UPDATE\n', flush=True)
             cubeState.value = 1
             updated.value = datetime.now().timestamp()
+            conditionState.value = condition_to_code(get_condition(weather_now))
+            tempValue.value = get_temp(weather_now) - 273.15
             pprint(weather_now)
             colors = characterize_weather(weather_now)
 
