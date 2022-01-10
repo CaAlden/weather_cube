@@ -20,10 +20,13 @@ def toHex(num):
 def toDec(num):
     return int(num, 16)
 
+error_code = Value('i', 0, lock=False)
+
 ## MQTT HELPERS START
 # Handle connecting to mqtt
 def connect_mqtt(mqtt_config):
     def on_connect(client, userdata, flags, rc):
+        error_code.value = rc
         if rc == 0:
             pprint(userdata)
         else:
@@ -131,6 +134,13 @@ def characterize_weather(weather):
 
 ## END WEATHER LOGIC
 
+def get_error_row(code):
+    return f"""
+        <div style="padding: .75rem 1.25rem; margin-bottom: 1rem; border: 1px solid #f5c6cb; background-color: #f8d7da; color: #721c24; border-radius: .25rem; margin-top: 1rem;">
+            <pre>{mqtt_client.connack_string(code)}</pre>
+        </div>
+"""
+
 def cubeStateToStr(state):
     return {
         0: 'Idle',
@@ -177,6 +187,7 @@ if __name__ == '__main__':
   <body>
     <main>
         <h1>Weather Cube</h1>
+        {get_error_alert(error_code.value) if error_code.value > 0 else ''}
         <table>
             <tbody>
                 <tr>
