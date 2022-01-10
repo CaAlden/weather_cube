@@ -77,18 +77,18 @@ def get_current_weather(weather_config):
     return resp.json()
 
 code_main_color = {
-    'Ash': '#FF0099',
+    'Ash': '#FF0000',
     'Drizzle': '#FF0099',
-    'Dust': '#FF0099',
+    'Dust': '#FF0000',
     'Haze': '#FF0099',
     'Mist': '#FF0099',
     'Rain': '#FF0099',
-    'Sand': '#FF0099',
-    'Smoke': '#FF0099',
-    'Snow': '#FF0099',
-    'Squall': '#FF0099',
-    'Thunderstorm': '#FF0099',
-    'Tornado': '#FF0099',
+    'Sand': '#FF0000',
+    'Smoke': '#FF0000',
+    'Snow': '#A020F0',
+    'Squall': '#A020F0',
+    'Thunderstorm': '#A020F0',
+    'Tornado': '#FF0000',
 }
 
 def code_to_condition(code):
