@@ -160,7 +160,6 @@ if __name__ == '__main__':
     conditionState = Value('i', -1, lock=False)
     tempValue = Value('d', 0.0, lock=False)
     updated = Value('d', datetime.now().timestamp(), lock=False)
-    raining = Value('b', False, lock=False)
     app = Flask(__name__)
     @app.route('/')
     def index():
@@ -199,10 +198,6 @@ if __name__ == '__main__':
                 <tr>
                     <td>Color</td>
                     <td style="display: flex; gap: 10px; color: rgb({tempColor[0]}, {tempColor[1]}, {tempColor[2]})">{tempColor[:]}</td>
-                </tr>
-                <tr>
-                    <td>Rain / Snow etc.</td>
-                    <td>{raining.value}</td>
                 </tr>
             </tbody>
         </table>
