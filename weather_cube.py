@@ -189,7 +189,7 @@ if __name__ == '__main__':
                 </tr>
                 <tr>
                     <td>Temperature</td>
-                    <td>{tempValue.value}°C</td>
+                    <td>{'{0:.2f}'.format(tempValue.value)}°C</td>
                 </tr>
                 <tr>
                     <td>Condition</td>
