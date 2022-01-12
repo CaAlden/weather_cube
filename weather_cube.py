@@ -35,7 +35,10 @@ def connect_mqtt(mqtt_config):
     client = mqtt_client.Client(mqtt_config['client_id'])
     client.username_pw_set(mqtt_config['username'], mqtt_config['password'])
     client.on_connect = on_connect
-    client.connect(mqtt_config['broker'], mqtt_config['port'])
+    try:
+        client.connect(mqtt_config['broker'], mqtt_config['port'])
+    except:
+        error_code.value = 6
     return client
 
 # Subscribe to a topic
