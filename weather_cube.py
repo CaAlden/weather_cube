@@ -137,7 +137,7 @@ def characterize_weather(weather):
 
 ## END WEATHER LOGIC
 
-def get_error_row(code):
+def get_error_alert(code):
     return f"""
         <div style="padding: .75rem 1.25rem; margin-bottom: 1rem; border: 1px solid #f5c6cb; background-color: #f8d7da; color: #721c24; border-radius: .25rem; margin-top: 1rem;">
             <pre>{mqtt_client.connack_string(code)}</pre>
